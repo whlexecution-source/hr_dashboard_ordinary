@@ -402,7 +402,11 @@
                 const workDateStr = c.workDate ? new Date(c.workDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '-';
 
                 // แก้ไขการแสดงผลสถานะรอยสัก
-                const hasTattoo = c.tattoo && c.tattoo.toString().includes('มี');
+                // OLD: const hasTattoo = c.tattoo && c.tattoo.toString().includes('มี'); (This matches "ไม่มี" too!)
+                // NEW: Check if it has 'มี' AND does NOT have 'ไม่มี'
+                const tattooStr = c.tattoo ? c.tattoo.toString() : '';
+                const hasTattoo = tattooStr.includes('มี') && !tattooStr.includes('ไม่มี');
+                
                 const tattooText = hasTattoo ? 'มีรอยสัก' : 'ไม่มีรอยสัก';
                 const tattooBadge = hasTattoo 
                     ? `<span class="badge badge-tattoo-yes border border-danger-subtle"><i class="fas fa-exclamation-circle me-1"></i>${tattooText}</span>`
@@ -467,8 +471,9 @@
             const applyDate = c.timestamp ? new Date(c.timestamp).toLocaleDateString('th-TH', { dateStyle: 'long' }) : '-';
             const workDate = c.workDate ? new Date(c.workDate).toLocaleDateString('th-TH', { dateStyle: 'long' }) : '-';
             
-            // Tattoo text in modal
-            const hasTattoo = c.tattoo && c.tattoo.toString().includes('มี');
+            // Tattoo text in modal - Apply SAME logic fix here
+            const tattooStr = c.tattoo ? c.tattoo.toString() : '';
+            const hasTattoo = tattooStr.includes('มี') && !tattooStr.includes('ไม่มี');
             const tattooText = hasTattoo ? 'มีรอยสัก' : 'ไม่มีรอยสัก';
 
             modalBody.innerHTML = `
