@@ -10,8 +10,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- HTML2PDF Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
         :root {
@@ -53,11 +51,7 @@
             border-left-color: #000;
         }
         .nav-link i { margin-right: 10px; width: 20px; text-align: center; }
-        
-        .sidebar-bottom {
-            margin-top: auto;
-            border-top: 1px solid #eee;
-        }
+        .sidebar-bottom { margin-top: auto; border-top: 1px solid #eee; }
 
         /* Card Design */
         .candidate-card {
@@ -91,7 +85,6 @@
             border-radius: 4px;
             font-size: 0.75rem;
         }
-
         .badge-tattoo-no { background-color: #d1e7dd; color: #0f5132; }
         .badge-tattoo-yes { background-color: #f8d7da; color: #842029; }
 
@@ -114,7 +107,6 @@
             background-color: #000;
             border-color: #000;
         }
-        
         .store-item {
             background: #fff;
             padding: 15px;
@@ -125,70 +117,6 @@
         }
         .store-item:first-child { border-top-left-radius: 8px; border-top-right-radius: 8px; }
         .store-item:last-child { border-bottom: none; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; }
-
-        /* --- RESUME PRINT TEMPLATE (Hidden) --- */
-        #resume-template {
-            display: none; 
-            background: white;
-            font-family: 'Prompt', sans-serif;
-            color: #333;
-            width: 210mm; 
-            padding: 15mm;
-            box-sizing: border-box;
-        }
-        
-        .resume-header {
-            text-align: center;
-            color: #2c5e97; 
-            font-weight: bold;
-            font-size: 24px;
-            margin-bottom: 20px;
-        }
-        .resume-name {
-            color: #4a86e8; 
-            font-weight: bold;
-            font-size: 18px;
-            margin-bottom: 15px;
-        }
-        .resume-section-title {
-            color: #4a86e8;
-            font-weight: bold;
-            font-size: 16px;
-            margin-top: 20px;
-            margin-bottom: 10px;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 5px;
-        }
-        .resume-grid {
-            display: flex;
-            justify-content: space-between;
-        }
-        .resume-left {
-            width: 70%;
-        }
-        .resume-right {
-            width: 25%;
-            text-align: right;
-        }
-        .resume-photo {
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
-            border: 1px solid #ddd;
-            background-color: #eee;
-        }
-        .resume-text-row {
-            margin-bottom: 5px;
-            font-size: 14px;
-        }
-        .resume-job-block {
-            margin-bottom: 15px;
-            padding-left: 10px;
-            border-left: 2px solid #eee;
-        }
-        .job-title { font-weight: bold; font-size: 15px; }
-        .job-detail { font-size: 14px; margin-bottom: 3px; }
-        .job-label { font-weight: 600; min-width: 120px; display: inline-block; }
 
         @media (max-width: 768px) {
             .sidebar { width: 70px; }
@@ -274,64 +202,10 @@
                 </div>
                 <div class="modal-footer border-top-0">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">ปิด</button>
-                    <button type="button" class="btn btn-dark" id="btnExportModal"><i class="fas fa-file-pdf me-2"></i>Export Resume</button>
+                    <!-- เปลี่ยนปุ่มเป็น Generate Doc -->
+                    <button type="button" class="btn btn-primary" id="btnExportModal"><i class="fas fa-file-word me-2"></i>สร้างไฟล์ Resume (Docs)</button>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- HIDDEN RESUME TEMPLATE FOR PDF GENERATION -->
-    <div id="resume-container">
-        <div id="resume-template">
-            <div class="resume-header" id="pdf-header">Watsons (สาขา)</div>
-            
-            <div class="resume-grid">
-                <div class="resume-left">
-                    <div class="resume-name" id="pdf-name">นาย/นาง/นางสาว (ชื่อ-นามสกุล)</div>
-                    <div class="resume-text-row"><strong>ชื่อเล่น:</strong> <span id="pdf-nickname">-</span></div>
-                    <div class="resume-text-row"><strong>ส่วนสูง/น้ำหนัก/BMI:</strong> <span id="pdf-body-stats">-</span></div>
-                    <div class="resume-text-row"><strong>การศึกษา:</strong> <span id="pdf-education">-</span></div>
-                    
-                    <div class="resume-section-title">Key Qualifications</div>
-                    <div id="pdf-qualifications" style="white-space: pre-line; font-size: 14px; margin-bottom: 20px;">-</div>
-                </div>
-                <div class="resume-right">
-                    <!-- เพิ่ม crossorigin="anonymous" สำหรับการดึงรูปข้ามโดเมน -->
-                    <img id="pdf-photo" class="resume-photo" src="" alt="Candidate Photo" crossorigin="anonymous">
-                </div>
-            </div>
-
-            <div class="resume-section-title">Work Experience</div>
-            <div id="pdf-work-experience">
-                <!-- Job 1 -->
-                <div class="resume-job-block">
-                    <div class="job-title">1. <span id="pdf-job1-comp"></span></div>
-                    <div class="job-detail"><span class="job-label">ตำแหน่ง:</span> <span id="pdf-job1-pos"></span></div>
-                    <div class="job-detail"><span class="job-label">ระยะเวลา:</span> <span id="pdf-job1-dur"></span></div>
-                    <div class="job-detail"><span class="job-label">ยอดขายต่อเดือน:</span> <span id="pdf-job1-sales"></span></div>
-                    <div class="job-detail"><span class="job-label">เหตุผลที่ลาออก:</span> <span id="pdf-job1-reason">-</span></div>
-                </div>
-                <!-- Job 2 -->
-                <div class="resume-job-block">
-                    <div class="job-title">2. <span id="pdf-job2-comp"></span></div>
-                    <div class="job-detail"><span class="job-label">ตำแหน่ง:</span> <span id="pdf-job2-pos"></span></div>
-                    <div class="job-detail"><span class="job-label">ระยะเวลา:</span> <span id="pdf-job2-dur"></span></div>
-                    <div class="job-detail"><span class="job-label">ยอดขายต่อเดือน:</span> <span id="pdf-job2-sales"></span></div>
-                    <div class="job-detail"><span class="job-label">เหตุผลที่ลาออก:</span> <span id="pdf-job2-reason">-</span></div>
-                </div>
-                <!-- Job 3 -->
-                <div class="resume-job-block">
-                    <div class="job-title">3. <span id="pdf-job3-comp"></span></div>
-                    <div class="job-detail"><span class="job-label">ตำแหน่ง:</span> <span id="pdf-job3-pos"></span></div>
-                    <div class="job-detail"><span class="job-label">ระยะเวลา:</span> <span id="pdf-job3-dur"></span></div>
-                    <div class="job-detail"><span class="job-label">ยอดขายต่อเดือน:</span> <span id="pdf-job3-sales"></span></div>
-                    <div class="job-detail"><span class="job-label">เหตุผลที่ลาออก:</span> <span id="pdf-job3-reason">-</span></div>
-                </div>
-            </div>
-
-            <div class="resume-section-title">Expected Salary</div>
-            <div id="pdf-salary" style="font-size: 16px; font-weight: bold;">-</div>
-
         </div>
     </div>
 
@@ -401,12 +275,9 @@
                 const applyDate = c.timestamp ? new Date(c.timestamp).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '-';
                 const workDateStr = c.workDate ? new Date(c.workDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '-';
 
-                // แก้ไขการแสดงผลสถานะรอยสัก
-                // OLD: const hasTattoo = c.tattoo && c.tattoo.toString().includes('มี'); (This matches "ไม่มี" too!)
-                // NEW: Check if it has 'มี' AND does NOT have 'ไม่มี'
+                // Tattoo Logic
                 const tattooStr = c.tattoo ? c.tattoo.toString() : '';
                 const hasTattoo = tattooStr.includes('มี') && !tattooStr.includes('ไม่มี');
-                
                 const tattooText = hasTattoo ? 'มีรอยสัก' : 'ไม่มีรอยสัก';
                 const tattooBadge = hasTattoo 
                     ? `<span class="badge badge-tattoo-yes border border-danger-subtle"><i class="fas fa-exclamation-circle me-1"></i>${tattooText}</span>`
@@ -466,12 +337,12 @@
 
             modalTitle.innerText = `${c.name} (${c.nickname})`;
             
+            // เรียก Prompt
             btnExport.onclick = () => promptExtraDataAndExport(c);
 
             const applyDate = c.timestamp ? new Date(c.timestamp).toLocaleDateString('th-TH', { dateStyle: 'long' }) : '-';
             const workDate = c.workDate ? new Date(c.workDate).toLocaleDateString('th-TH', { dateStyle: 'long' }) : '-';
             
-            // Tattoo text in modal - Apply SAME logic fix here
             const tattooStr = c.tattoo ? c.tattoo.toString() : '';
             const hasTattoo = tattooStr.includes('มี') && !tattooStr.includes('ไม่มี');
             const tattooText = hasTattoo ? 'มีรอยสัก' : 'ไม่มีรอยสัก';
@@ -527,9 +398,11 @@
             candidateModal.show();
         }
 
+        // --- NEW: Generate Google Doc via Backend ---
+
         async function promptExtraDataAndExport(c) {
             const { value: formValues } = await Swal.fire({
-                title: 'ระบุข้อมูลเพิ่มเติมสำหรับ Resume',
+                title: 'ระบุข้อมูลเพิ่มเติม',
                 html:
                     '<div class="text-start">' +
                     '<label class="form-label fw-bold">Key Qualifications (คุณสมบัติเด่น)</label>' +
@@ -537,8 +410,8 @@
                     '</div>',
                 focusConfirm: false,
                 showCancelButton: true,
-                confirmButtonText: 'สร้าง PDF',
-                confirmButtonColor: '#000',
+                confirmButtonText: 'สร้าง Resume',
+                confirmButtonColor: '#0b5394',
                 cancelButtonText: 'ยกเลิก',
                 preConfirm: () => {
                     return {
@@ -548,72 +421,49 @@
             });
 
             if (formValues) {
-                generatePDF(c, formValues);
+                requestDocGeneration(c, formValues);
             }
         }
 
-        function generatePDF(c, extraData) {
-            let bmi = "-";
-            if(c.weight && c.height) {
-                const h_meter = c.height / 100;
-                bmi = (c.weight / (h_meter * h_meter)).toFixed(2);
-            }
-
-            document.getElementById('pdf-header').textContent = `Watsons (${c.branch})`;
-            document.getElementById('pdf-name').textContent = `${c.name}`; 
-            document.getElementById('pdf-nickname').textContent = c.nickname || '-';
-            document.getElementById('pdf-body-stats').textContent = `${c.height} ซม. / ${c.weight} กก. / BMI: ${bmi}`;
-            document.getElementById('pdf-education').textContent = c.education || '-';
-            
-            // Set image source and crossOrigin
-            const imgEl = document.getElementById('pdf-photo');
-            imgEl.crossOrigin = "anonymous";
-            imgEl.src = c.photoUrl;
-
-            document.getElementById('pdf-qualifications').textContent = extraData.quals;
-
-            const jobs = [c.job1, c.job2, c.job3];
-            for(let i=1; i<=3; i++) {
-                const job = jobs[i-1];
-                document.getElementById(`pdf-job${i}-comp`).textContent = job.comp || '-';
-                document.getElementById(`pdf-job${i}-pos`).textContent = job.pos || '-';
-                document.getElementById(`pdf-job${i}-dur`).textContent = job.dur || '-';
-                document.getElementById(`pdf-job${i}-sales`).textContent = job.sales || '-';
-                document.getElementById(`pdf-job${i}-reason`).textContent = job.reason || '-'; 
-            }
-
-            document.getElementById('pdf-salary').textContent = c.expectedSalary || '-';
-
-            const element = document.getElementById('resume-template');
-            element.style.display = 'block';
-
-            const opt = {
-                margin:       10,
-                filename:     `Resume_${c.nickname}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, allowTaint: true }, // เพิ่มการตั้งค่า CORS
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-
-            html2pdf().set(opt).from(element).save().then(() => {
-                element.style.display = 'none';
-                Swal.fire({
-                    icon: 'success',
-                    title: 'ดาวน์โหลดสำเร็จ',
-                    timer: 1500,
-                    showConfirmButton: false
-                });
-            }).catch(err => {
-                console.error("PDF Export Error:", err);
-                 element.style.display = 'none';
-                 Swal.fire({
-                    icon: 'error',
-                    title: 'เกิดข้อผิดพลาดในการสร้าง PDF',
-                    text: 'อาจเกิดจากปัญหาลิขสิทธิ์รูปภาพ (CORS) หรือการเชื่อมต่อ',
-                });
+        async function requestDocGeneration(c, extraData) {
+            Swal.fire({
+                title: 'กำลังสร้างไฟล์...',
+                text: 'กรุณารอสักครู่ ระบบกำลังสร้าง Google Doc และดึงรูปภาพ',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
             });
+
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ 
+                        action: 'generateResumeDoc',
+                        candidate: c,
+                        extraData: extraData
+                    })
+                });
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'สร้างไฟล์สำเร็จ!',
+                        html: `<a href="${result.data.url}" target="_blank" class="btn btn-primary">เปิดไฟล์ Google Doc</a>`,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire('Error', result.message, 'error');
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Error', 'ไม่สามารถเชื่อมต่อ Server ได้', 'error');
+            }
         }
 
+        // --- Store Management Functions (เหมือนเดิม) ---
+        
         async function loadStores() {
             const container = document.getElementById('storeListContainer');
             container.innerHTML = '<div class="text-center p-5 text-muted"><div class="spinner-border text-dark"></div></div>';
