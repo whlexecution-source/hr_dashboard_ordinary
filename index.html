@@ -18,7 +18,6 @@
             --primary-black: #111;
             --secondary-grey: #f4f4f4;
             --accent-color: #000;
-            --watson-blue: #0099cc; 
         }
         body {
             font-family: 'Prompt', sans-serif;
@@ -297,7 +296,8 @@
                     <div id="pdf-qualifications" style="white-space: pre-line; font-size: 14px; margin-bottom: 20px;">-</div>
                 </div>
                 <div class="resume-right">
-                    <img id="pdf-photo" class="resume-photo" src="" alt="Candidate Photo">
+                    <!-- เพิ่ม crossorigin="anonymous" สำหรับการดึงรูปข้ามโดเมน -->
+                    <img id="pdf-photo" class="resume-photo" src="" alt="Candidate Photo" crossorigin="anonymous">
                 </div>
             </div>
 
@@ -401,10 +401,12 @@
                 const applyDate = c.timestamp ? new Date(c.timestamp).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '-';
                 const workDateStr = c.workDate ? new Date(c.workDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '-';
 
+                // แก้ไขการแสดงผลสถานะรอยสัก
                 const hasTattoo = c.tattoo && c.tattoo.toString().includes('มี');
+                const tattooText = hasTattoo ? 'มีรอยสัก' : 'ไม่มีรอยสัก';
                 const tattooBadge = hasTattoo 
-                    ? `<span class="badge badge-tattoo-yes border border-danger-subtle"><i class="fas fa-exclamation-circle me-1"></i>รอยสัก</span>`
-                    : `<span class="badge badge-tattoo-no border border-success-subtle"><i class="fas fa-check-circle me-1"></i>ไร้รอยสัก</span>`;
+                    ? `<span class="badge badge-tattoo-yes border border-danger-subtle"><i class="fas fa-exclamation-circle me-1"></i>${tattooText}</span>`
+                    : `<span class="badge badge-tattoo-no border border-success-subtle"><i class="fas fa-check-circle me-1"></i>${tattooText}</span>`;
 
                 html += `
                     <div class="col-md-6 col-lg-4 col-xl-3">
@@ -460,12 +462,15 @@
 
             modalTitle.innerText = `${c.name} (${c.nickname})`;
             
-            // Pass the entire candidate object to export function
             btnExport.onclick = () => promptExtraDataAndExport(c);
 
             const applyDate = c.timestamp ? new Date(c.timestamp).toLocaleDateString('th-TH', { dateStyle: 'long' }) : '-';
             const workDate = c.workDate ? new Date(c.workDate).toLocaleDateString('th-TH', { dateStyle: 'long' }) : '-';
             
+            // Tattoo text in modal
+            const hasTattoo = c.tattoo && c.tattoo.toString().includes('มี');
+            const tattooText = hasTattoo ? 'มีรอยสัก' : 'ไม่มีรอยสัก';
+
             modalBody.innerHTML = `
                 <div class="row">
                     <div class="col-md-4 mb-3">
@@ -506,6 +511,7 @@
                                 <span class="text-danger">สาเหตุที่ออก: ${c.job2.reason || '-'}</span>
                             </div>
                         </div>
+                         <div class="col-12 mt-3"><span class="detail-label">รอยสัก:</span> <span class="detail-value">${tattooText}</span></div>
                     </div>
                 </div>
             `;
@@ -516,11 +522,7 @@
             candidateModal.show();
         }
 
-        // --- UPDATED: Export Resume with only Key Qualifications Prompt ---
-
         async function promptExtraDataAndExport(c) {
-            // Popup Form asks ONLY for Key Qualifications
-            // Salary and Reason are now pulled from the sheet data (c)
             const { value: formValues } = await Swal.fire({
                 title: 'ระบุข้อมูลเพิ่มเติมสำหรับ Resume',
                 html:
@@ -557,7 +559,11 @@
             document.getElementById('pdf-nickname').textContent = c.nickname || '-';
             document.getElementById('pdf-body-stats').textContent = `${c.height} ซม. / ${c.weight} กก. / BMI: ${bmi}`;
             document.getElementById('pdf-education').textContent = c.education || '-';
-            document.getElementById('pdf-photo').src = c.photoUrl;
+            
+            // Set image source and crossOrigin
+            const imgEl = document.getElementById('pdf-photo');
+            imgEl.crossOrigin = "anonymous";
+            imgEl.src = c.photoUrl;
 
             document.getElementById('pdf-qualifications').textContent = extraData.quals;
 
@@ -568,11 +574,9 @@
                 document.getElementById(`pdf-job${i}-pos`).textContent = job.pos || '-';
                 document.getElementById(`pdf-job${i}-dur`).textContent = job.dur || '-';
                 document.getElementById(`pdf-job${i}-sales`).textContent = job.sales || '-';
-                // USE REASON FROM SHEET DATA
                 document.getElementById(`pdf-job${i}-reason`).textContent = job.reason || '-'; 
             }
 
-            // USE SALARY FROM SHEET DATA
             document.getElementById('pdf-salary').textContent = c.expectedSalary || '-';
 
             const element = document.getElementById('resume-template');
@@ -582,7 +586,7 @@
                 margin:       10,
                 filename:     `Resume_${c.nickname}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2 },
+                html2canvas:  { scale: 2, useCORS: true, allowTaint: true }, // เพิ่มการตั้งค่า CORS
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
@@ -594,11 +598,17 @@
                     timer: 1500,
                     showConfirmButton: false
                 });
+            }).catch(err => {
+                console.error("PDF Export Error:", err);
+                 element.style.display = 'none';
+                 Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาดในการสร้าง PDF',
+                    text: 'อาจเกิดจากปัญหาลิขสิทธิ์รูปภาพ (CORS) หรือการเชื่อมต่อ',
+                });
             });
         }
 
-        // --- Store Management Functions ---
-        
         async function loadStores() {
             const container = document.getElementById('storeListContainer');
             container.innerHTML = '<div class="text-center p-5 text-muted"><div class="spinner-border text-dark"></div></div>';
