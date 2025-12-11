@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Dashboard - Recruitment</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- HTML2PDF Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-black: #111;
+            --secondary-grey: #f4f4f4;
+            --accent-color: #000;
+            --watson-blue: #0099cc; 
+        }
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: var(--secondary-grey);
+            color: #333;
+        }
+        .sidebar {
+            background-color: #fff;
+            height: 100vh;
+            position: fixed;
+            width: 250px;
+            border-right: 1px solid #ddd;
+            padding-top: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 30px;
+        }
+        .nav-link {
+            color: #555;
+            padding: 15px 20px;
+            font-weight: 500;
+            border-radius: 0;
+            border-left: 4px solid transparent;
+            cursor: pointer;
+        }
+        .nav-link:hover, .nav-link.active {
+            background-color: #f0f0f0;
+            color: #000;
+            border-left-color: #000;
+        }
+        .nav-link i { margin-right: 10px; width: 20px; text-align: center; }
+        
+        .sidebar-bottom {
+            margin-top: auto;
+            border-top: 1px solid #eee;
+        }
+
+        /* Card Design */
+        .candidate-card {
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            height: 100%;
+        }
+        .candidate-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+            border-color: #000;
+        }
+        .card-img-top {
+            height: 320px;
+            object-fit: cover;
+            object-position: top center;
+            background-color: #eee;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .card-body { padding: 15px; }
+        
+        .badge-branch {
+            background-color: #000;
+            color: #fff;
+            font-weight: 400;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+
+        .badge-tattoo-no { background-color: #d1e7dd; color: #0f5132; }
+        .badge-tattoo-yes { background-color: #f8d7da; color: #842029; }
+
+        /* Modal Design */
+        .modal-header { border-bottom: none; }
+        .modal-body-scroll { max-height: 70vh; overflow-y: auto; }
+        .detail-label { font-weight: 600; color: #555; }
+        .detail-value { color: #000; }
+        .modal-img { width: 100%; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+
+        /* Toggle Switch Styling */
+        .form-switch .form-check-input {
+            width: 3em;
+            height: 1.5em;
+            background-color: #ddd;
+            border-color: #ddd;
+            cursor: pointer;
+        }
+        .form-switch .form-check-input:checked {
+            background-color: #000;
+            border-color: #000;
+        }
+        
+        .store-item {
+            background: #fff;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .store-item:first-child { border-top-left-radius: 8px; border-top-right-radius: 8px; }
+        .store-item:last-child { border-bottom: none; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; }
+
+        /* --- RESUME PRINT TEMPLATE (Hidden) --- */
+        #resume-template {
+            display: none; 
+            background: white;
+            font-family: 'Prompt', sans-serif;
+            color: #333;
+            width: 210mm; 
+            padding: 15mm;
+            box-sizing: border-box;
+        }
+        
+        .resume-header {
+            text-align: center;
+            color: #2c5e97; 
+            font-weight: bold;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .resume-name {
+            color: #4a86e8; 
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        .resume-section-title {
+            color: #4a86e8;
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        .resume-grid {
+            display: flex;
+            justify-content: space-between;
+        }
+        .resume-left {
+            width: 70%;
+        }
+        .resume-right {
+            width: 25%;
+            text-align: right;
+        }
+        .resume-photo {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border: 1px solid #ddd;
+            background-color: #eee;
+        }
+        .resume-text-row {
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        .resume-job-block {
+            margin-bottom: 15px;
+            padding-left: 10px;
+            border-left: 2px solid #eee;
+        }
+        .job-title { font-weight: bold; font-size: 15px; }
+        .job-detail { font-size: 14px; margin-bottom: 3px; }
+        .job-label { font-weight: 600; min-width: 120px; display: inline-block; }
+
+        @media (max-width: 768px) {
+            .sidebar { width: 70px; }
+            .sidebar span { display: none; }
+            .main-content { margin-left: 70px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div>
+            <h4 class="text-center mb-4 mt-2 fw-bold"><i class="fas fa-cube"></i> <span class="d-none d-md-inline">HR Admin</span></h4>
+            <ul class="nav flex-column" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link w-100 text-start active" id="candidate-tab" data-bs-toggle="tab" data-bs-target="#candidate" type="button" role="tab">
+                        <i class="fas fa-users"></i> <span>ผู้สมัครงาน</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link w-100 text-start" id="store-tab" data-bs-toggle="tab" data-bs-target="#store" type="button" role="tab" onclick="loadStores()">
+                        <i class="fas fa-store"></i> <span>จัดการสาขา</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="tab-content" id="myTabContent">
+            
+            <!-- Tab 1: Participants (Main) -->
+            <div class="tab-pane fade show active" id="candidate" role="tabpanel">
+                <div class="row align-items-center mb-4">
+                    <div class="col-md-4">
+                        <h3 class="fw-bold mb-0">รายชื่อผู้สมัคร</h3>
+                    </div>
+                    <div class="col-md-8 text-md-end mt-3 mt-md-0">
+                        <div class="d-inline-flex gap-2">
+                            <select class="form-select w-auto" id="branchFilter" onchange="filterCandidates()">
+                                <option value="">ทุกสาขา</option>
+                            </select>
+                            <input type="text" class="form-control d-inline-block w-auto" placeholder="ค้นหาชื่อ, เบอร์..." id="searchInput" onkeyup="filterCandidates()">
+                            <button class="btn btn-dark" onclick="loadParticipants()"><i class="fas fa-sync-alt"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4" id="candidateGrid">
+                    <!-- Cards will be injected via JS -->
+                </div>
+            </div>
+
+            <!-- Tab 2: Store Management -->
+            <div class="tab-pane fade" id="store" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="fw-bold">จัดการสถานะร้านค้า (Open/Close)</h3>
+                    <button class="btn btn-dark btn-sm" onclick="loadStores()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                </div>
+                
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-0" id="storeListContainer">
+                        <!-- Content will be injected via JS -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Candidate Detail Modal -->
+    <div class="modal fade" id="candidateModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="modalTitle">รายละเอียดผู้สมัคร</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body modal-body-scroll" id="modalBody">
+                    <!-- Content injected via JS -->
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">ปิด</button>
+                    <button type="button" class="btn btn-dark" id="btnExportModal"><i class="fas fa-file-pdf me-2"></i>Export Resume</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HIDDEN RESUME TEMPLATE FOR PDF GENERATION -->
+    <div id="resume-container">
+        <div id="resume-template">
+            <div class="resume-header" id="pdf-header">Watsons (สาขา)</div>
+            
+            <div class="resume-grid">
+                <div class="resume-left">
+                    <div class="resume-name" id="pdf-name">นาย/นาง/นางสาว (ชื่อ-นามสกุล)</div>
+                    <div class="resume-text-row"><strong>ชื่อเล่น:</strong> <span id="pdf-nickname">-</span></div>
+                    <div class="resume-text-row"><strong>ส่วนสูง/น้ำหนัก/BMI:</strong> <span id="pdf-body-stats">-</span></div>
+                    <div class="resume-text-row"><strong>การศึกษา:</strong> <span id="pdf-education">-</span></div>
+                    
+                    <div class="resume-section-title">Key Qualifications</div>
+                    <div id="pdf-qualifications" style="white-space: pre-line; font-size: 14px; margin-bottom: 20px;">-</div>
+                </div>
+                <div class="resume-right">
+                    <img id="pdf-photo" class="resume-photo" src="" alt="Candidate Photo">
+                </div>
+            </div>
+
+            <div class="resume-section-title">Work Experience</div>
+            <div id="pdf-work-experience">
+                <!-- Job 1 -->
+                <div class="resume-job-block">
+                    <div class="job-title">1. <span id="pdf-job1-comp"></span></div>
+                    <div class="job-detail"><span class="job-label">ตำแหน่ง:</span> <span id="pdf-job1-pos"></span></div>
+                    <div class="job-detail"><span class="job-label">ระยะเวลา:</span> <span id="pdf-job1-dur"></span></div>
+                    <div class="job-detail"><span class="job-label">ยอดขายต่อเดือน:</span> <span id="pdf-job1-sales"></span></div>
+                    <div class="job-detail"><span class="job-label">เหตุผลที่ลาออก:</span> <span id="pdf-job1-reason">-</span></div>
+                </div>
+                <!-- Job 2 -->
+                <div class="resume-job-block">
+                    <div class="job-title">2. <span id="pdf-job2-comp"></span></div>
+                    <div class="job-detail"><span class="job-label">ตำแหน่ง:</span> <span id="pdf-job2-pos"></span></div>
+                    <div class="job-detail"><span class="job-label">ระยะเวลา:</span> <span id="pdf-job2-dur"></span></div>
+                    <div class="job-detail"><span class="job-label">ยอดขายต่อเดือน:</span> <span id="pdf-job2-sales"></span></div>
+                    <div class="job-detail"><span class="job-label">เหตุผลที่ลาออก:</span> <span id="pdf-job2-reason">-</span></div>
+                </div>
+                <!-- Job 3 -->
+                <div class="resume-job-block">
+                    <div class="job-title">3. <span id="pdf-job3-comp"></span></div>
+                    <div class="job-detail"><span class="job-label">ตำแหน่ง:</span> <span id="pdf-job3-pos"></span></div>
+                    <div class="job-detail"><span class="job-label">ระยะเวลา:</span> <span id="pdf-job3-dur"></span></div>
+                    <div class="job-detail"><span class="job-label">ยอดขายต่อเดือน:</span> <span id="pdf-job3-sales"></span></div>
+                    <div class="job-detail"><span class="job-label">เหตุผลที่ลาออก:</span> <span id="pdf-job3-reason">-</span></div>
+                </div>
+            </div>
+
+            <div class="resume-section-title">Expected Salary</div>
+            <div id="pdf-salary" style="font-size: 16px; font-weight: bold;">-</div>
+
+        </div>
+    </div>
+
+    <!-- Bootstrap & SweetAlert -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        // ============================================
+        // CONFIGURATION
+        // ============================================
+        const GOOGLE_SCRIPT_URL = "YOUR_GOOGLE_SCRIPT_WEB_APP_URL_HERE"; 
+        // ============================================
+
+        let allCandidates = [];
+        let allStores = [];
+        let candidateModal = null;
+
+        // --- Participant Functions ---
+
+        async function loadParticipants() {
+            const container = document.getElementById('candidateGrid');
+            container.innerHTML = '<div class="col-12 text-center p-5"><div class="spinner-border text-dark"></div></div>';
+
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'getParticipants' })
+                });
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    allCandidates = result.data;
+                    populateBranchFilter(allCandidates);
+                    renderCandidates(allCandidates);
+                } else {
+                    container.innerHTML = `<div class="col-12 text-center text-danger">Error: ${result.message}</div>`;
+                }
+            } catch (error) {
+                console.error(error);
+                container.innerHTML = '<div class="col-12 text-center text-danger">ไม่สามารถเชื่อมต่อ Server ได้</div>';
+            }
+        }
+
+        function populateBranchFilter(candidates) {
+            const branchFilter = document.getElementById('branchFilter');
+            const currentVal = branchFilter.value;
+            const branches = [...new Set(candidates.map(c => c.branch))];
+            
+            let html = '<option value="">ทุกสาขา</option>';
+            branches.forEach(b => {
+                html += `<option value="${b}">${b}</option>`;
+            });
+            branchFilter.innerHTML = html;
+            branchFilter.value = currentVal;
+        }
+
+        function renderCandidates(candidates) {
+            const container = document.getElementById('candidateGrid');
+            if (candidates.length === 0) {
+                container.innerHTML = '<div class="col-12 text-center p-5 text-muted">ไม่พบข้อมูลผู้สมัคร</div>';
+                return;
+            }
+
+            let html = '';
+            candidates.forEach(c => {
+                const applyDate = c.timestamp ? new Date(c.timestamp).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '-';
+                const workDateStr = c.workDate ? new Date(c.workDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '-';
+
+                const hasTattoo = c.tattoo && c.tattoo.toString().includes('มี');
+                const tattooBadge = hasTattoo 
+                    ? `<span class="badge badge-tattoo-yes border border-danger-subtle"><i class="fas fa-exclamation-circle me-1"></i>รอยสัก</span>`
+                    : `<span class="badge badge-tattoo-no border border-success-subtle"><i class="fas fa-check-circle me-1"></i>ไร้รอยสัก</span>`;
+
+                html += `
+                    <div class="col-md-6 col-lg-4 col-xl-3">
+                        <div class="candidate-card h-100 d-flex flex-column" onclick="openCandidateModal(${c.id})">
+                            <img src="${c.photoUrl}" class="card-img-top" alt="${c.name}" onerror="this.src='https://via.placeholder.com/300x400?text=No+Image'">
+                            <div class="card-body d-flex flex-column flex-grow-1">
+                                <div class="mb-2 d-flex justify-content-between align-items-start">
+                                    <span class="badge-branch text-truncate" style="max-width: 60%;">${c.branch}</span>
+                                    ${tattooBadge}
+                                </div>
+                                <h5 class="card-title fw-bold mb-1">${c.name} (${c.nickname})</h5>
+                                
+                                <div class="d-flex justify-content-between small text-muted mb-2 border-bottom pb-2">
+                                    <span><i class="far fa-calendar-alt me-1"></i>สมัคร: ${applyDate}</span>
+                                    <span><i class="fas fa-briefcase me-1"></i>เริ่ม: <strong class="text-dark">${workDateStr}</strong></span>
+                                </div>
+
+                                <p class="card-text text-muted small mb-1">อายุ: ${c.age} | สูง: ${c.height} | หนัก: ${c.weight}</p>
+                                <p class="card-text text-muted small mb-2">งานล่าสุด: ${c.job1.pos || '-'}</p>
+                                
+                                <div class="mt-auto pt-2 text-center text-muted small" style="font-size: 0.75rem;">
+                                    <i class="fas fa-hand-pointer me-1"></i> คลิกเพื่อดูรายละเอียด
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function filterCandidates() {
+            const searchText = document.getElementById('searchInput').value.toLowerCase();
+            const branchVal = document.getElementById('branchFilter').value;
+
+            const filtered = allCandidates.filter(c => {
+                const matchText = (c.name && c.name.toLowerCase().includes(searchText)) || 
+                                  (c.nickname && c.nickname.toLowerCase().includes(searchText)) ||
+                                  (c.phone && c.phone.toString().includes(searchText));
+                const matchBranch = branchVal === "" || c.branch === branchVal;
+                return matchText && matchBranch;
+            });
+            renderCandidates(filtered);
+        }
+
+        function openCandidateModal(id) {
+            const c = allCandidates.find(x => x.id === id);
+            if (!c) return;
+
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+            const btnExport = document.getElementById('btnExportModal');
+
+            modalTitle.innerText = `${c.name} (${c.nickname})`;
+            
+            // Pass the entire candidate object to export function
+            btnExport.onclick = () => promptExtraDataAndExport(c);
+
+            const applyDate = c.timestamp ? new Date(c.timestamp).toLocaleDateString('th-TH', { dateStyle: 'long' }) : '-';
+            const workDate = c.workDate ? new Date(c.workDate).toLocaleDateString('th-TH', { dateStyle: 'long' }) : '-';
+            
+            modalBody.innerHTML = `
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <img src="${c.photoUrl}" class="modal-img mb-3" alt="Profile" onerror="this.src='https://via.placeholder.com/300x400?text=No+Image'">
+                        <div class="p-3 bg-light rounded text-center">
+                            <h6 class="fw-bold mb-2">ข้อมูลเบื้องต้น</h6>
+                            <p class="mb-1 small">อายุ: ${c.age} ปี</p>
+                            <p class="mb-1 small">สูง: ${c.height} ซม. / หนัก: ${c.weight} กก.</p>
+                            <p class="mb-1 small">ไซซ์ชุด: ${c.uniform}</p>
+                            <p class="mb-0 small">วัคซีน: ${c.vaccine} เข็ม</p>
+                            <p class="mb-0 small mt-2 fw-bold text-primary">เงินเดือนที่คาดหวัง: ${c.expectedSalary || '-'}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="badge bg-dark fs-6">${c.branch}</span>
+                            <small class="text-muted">วันที่สมัคร: ${applyDate}</small>
+                        </div>
+                        <h5 class="fw-bold border-bottom pb-2 mb-3">ข้อมูลการติดต่อ</h5>
+                        <div class="row mb-3">
+                            <div class="col-6"><span class="detail-label">เบอร์โทร:</span> <span class="detail-value">${c.phone}</span></div>
+                            <div class="col-6"><span class="detail-label">Line ID:</span> <span class="detail-value">${c.line}</span></div>
+                        </div>
+                        <h5 class="fw-bold border-bottom pb-2 mb-3">ประวัติการทำงาน</h5>
+                        <div class="bg-light p-3 rounded mb-2">
+                            <strong class="text-dark">1. ${c.job1.comp || '-'}</strong>
+                            <div class="small text-muted mt-1">
+                                ตำแหน่ง: ${c.job1.pos || '-'} | ระยะเวลา: ${c.job1.dur || '-'}<br>
+                                รายได้: ${c.job1.inc || '-'} | ยอดขาย: ${c.job1.sales || '-'}<br>
+                                <span class="text-danger">สาเหตุที่ออก: ${c.job1.reason || '-'}</span>
+                            </div>
+                        </div>
+                        <div class="bg-light p-3 rounded">
+                            <strong class="text-dark">2. ${c.job2.comp || '-'}</strong>
+                            <div class="small text-muted mt-1">
+                                ตำแหน่ง: ${c.job2.pos || '-'} | ระยะเวลา: ${c.job2.dur || '-'}<br>
+                                รายได้: ${c.job2.inc || '-'} | ยอดขาย: ${c.job2.sales || '-'}<br>
+                                <span class="text-danger">สาเหตุที่ออก: ${c.job2.reason || '-'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            if (!candidateModal) {
+                candidateModal = new bootstrap.Modal(document.getElementById('candidateModal'));
+            }
+            candidateModal.show();
+        }
+
+        // --- UPDATED: Export Resume with only Key Qualifications Prompt ---
+
+        async function promptExtraDataAndExport(c) {
+            // Popup Form asks ONLY for Key Qualifications
+            // Salary and Reason are now pulled from the sheet data (c)
+            const { value: formValues } = await Swal.fire({
+                title: 'ระบุข้อมูลเพิ่มเติมสำหรับ Resume',
+                html:
+                    '<div class="text-start">' +
+                    '<label class="form-label fw-bold">Key Qualifications (คุณสมบัติเด่น)</label>' +
+                    '<textarea id="swal-quals" class="form-control mb-3" rows="3" placeholder="- มีประสบการณ์ขาย 3 ปี\n- สื่อสารภาษาจีนได้"></textarea>' +
+                    '</div>',
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'สร้าง PDF',
+                confirmButtonColor: '#000',
+                cancelButtonText: 'ยกเลิก',
+                preConfirm: () => {
+                    return {
+                        quals: document.getElementById('swal-quals').value || '-'
+                    }
+                }
+            });
+
+            if (formValues) {
+                generatePDF(c, formValues);
+            }
+        }
+
+        function generatePDF(c, extraData) {
+            let bmi = "-";
+            if(c.weight && c.height) {
+                const h_meter = c.height / 100;
+                bmi = (c.weight / (h_meter * h_meter)).toFixed(2);
+            }
+
+            document.getElementById('pdf-header').textContent = `Watsons (${c.branch})`;
+            document.getElementById('pdf-name').textContent = `${c.name}`; 
+            document.getElementById('pdf-nickname').textContent = c.nickname || '-';
+            document.getElementById('pdf-body-stats').textContent = `${c.height} ซม. / ${c.weight} กก. / BMI: ${bmi}`;
+            document.getElementById('pdf-education').textContent = c.education || '-';
+            document.getElementById('pdf-photo').src = c.photoUrl;
+
+            document.getElementById('pdf-qualifications').textContent = extraData.quals;
+
+            const jobs = [c.job1, c.job2, c.job3];
+            for(let i=1; i<=3; i++) {
+                const job = jobs[i-1];
+                document.getElementById(`pdf-job${i}-comp`).textContent = job.comp || '-';
+                document.getElementById(`pdf-job${i}-pos`).textContent = job.pos || '-';
+                document.getElementById(`pdf-job${i}-dur`).textContent = job.dur || '-';
+                document.getElementById(`pdf-job${i}-sales`).textContent = job.sales || '-';
+                // USE REASON FROM SHEET DATA
+                document.getElementById(`pdf-job${i}-reason`).textContent = job.reason || '-'; 
+            }
+
+            // USE SALARY FROM SHEET DATA
+            document.getElementById('pdf-salary').textContent = c.expectedSalary || '-';
+
+            const element = document.getElementById('resume-template');
+            element.style.display = 'block';
+
+            const opt = {
+                margin:       10,
+                filename:     `Resume_${c.nickname}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                element.style.display = 'none';
+                Swal.fire({
+                    icon: 'success',
+                    title: 'ดาวน์โหลดสำเร็จ',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            });
+        }
+
+        // --- Store Management Functions ---
+        
+        async function loadStores() {
+            const container = document.getElementById('storeListContainer');
+            container.innerHTML = '<div class="text-center p-5 text-muted"><div class="spinner-border text-dark"></div></div>';
+            
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'getStores' })
+                });
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    allStores = result.data;
+                    renderStoreList(allStores);
+                } else {
+                    container.innerHTML = `<div class="p-4 text-danger">Error: ${result.message}</div>`;
+                }
+            } catch (error) {
+                console.error(error);
+                container.innerHTML = '<div class="p-4 text-danger">ไม่สามารถเชื่อมต่อ Server ได้</div>';
+            }
+        }
+
+        function renderStoreList(stores) {
+            const container = document.getElementById('storeListContainer');
+            if (stores.length === 0) {
+                container.innerHTML = '<div class="p-4 text-center">ไม่พบข้อมูลสาขา</div>';
+                return;
+            }
+            let html = '';
+            stores.forEach((store, index) => {
+                const isOpen = store.status.toLowerCase() === 'open';
+                html += `
+                    <div class="store-item">
+                        <div>
+                            <h5 class="mb-0 fw-bold">${store.name}</h5>
+                            <small class="text-muted">สถานะปัจจุบัน: <span id="status-text-${index}" class="${isOpen ? 'text-success' : 'text-danger'} fw-bold">${store.status}</span></small>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="switch-${index}" 
+                                ${isOpen ? 'checked' : ''} 
+                                onchange="toggleStore('${store.name}', this.checked, ${index})">
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        async function toggleStore(storeName, isChecked, index) {
+            const newStatus = isChecked ? 'Open' : 'Close';
+            const statusText = document.getElementById(`status-text-${index}`);
+            statusText.textContent = 'Updating...';
+            statusText.className = 'text-muted';
+
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ 
+                        action: 'updateStore', 
+                        storeName: storeName, 
+                        status: newStatus 
+                    })
+                });
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    statusText.textContent = newStatus;
+                    statusText.className = isChecked ? 'text-success' : 'text-danger';
+                    statusText.classList.add('fw-bold');
+                    const Toast = Swal.mixin({
+                        toast: true, position: 'top-end', showConfirmButton: false, timer: 1500
+                    });
+                    Toast.fire({ icon: 'success', title: 'อัปเดตสำเร็จ' });
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                Swal.fire('Error', 'อัปเดตสถานะไม่สำเร็จ', 'error');
+                document.getElementById(`switch-${index}`).checked = !isChecked;
+                statusText.textContent = !isChecked ? 'Open' : 'Close';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadParticipants();
+        });
+
+    </script>
+</body>
+</html>
