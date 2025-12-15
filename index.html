@@ -422,31 +422,24 @@
         // --- NEW: Generate Google Doc via Backend ---
 
         async function promptExtraDataAndExport(c) {
-            const { value: formValues } = await Swal.fire({
-                title: 'ระบุข้อมูลเพิ่มเติม',
-                html:
-                    '<div class="text-start">' +
-                    '<label class="form-label fw-bold">Key Qualifications (คุณสมบัติเด่น)</label>' +
-                    '<textarea id="swal-quals" class="form-control mb-3" rows="3" placeholder="- มีประสบการณ์ขาย 3 ปี\n- สื่อสารภาษาจีนได้"></textarea>' +
-                    '</div>',
-                focusConfirm: false,
+            // แก้ไข Popup: ไม่ต้องกรอกข้อมูลแล้ว ถามแค่ยืนยัน
+            const result = await Swal.fire({
+                title: 'สร้างไฟล์ Resume',
+                text: `คุณต้องการสร้างไฟล์ Google Docs สำหรับ ${c.name} หรือไม่?`,
+                icon: 'question',
                 showCancelButton: true,
-                confirmButtonText: 'สร้าง Resume',
+                confirmButtonText: 'สร้างไฟล์',
                 confirmButtonColor: '#0b5394',
-                cancelButtonText: 'ยกเลิก',
-                preConfirm: () => {
-                    return {
-                        quals: document.getElementById('swal-quals').value || '-'
-                    }
-                }
+                cancelButtonText: 'ยกเลิก'
             });
 
-            if (formValues) {
-                requestDocGeneration(c, formValues);
+            if (result.isConfirmed) {
+                // ส่งค่า candidate ไปอย่างเดียว ไม่ต้องมี extraData
+                requestDocGeneration(c);
             }
         }
 
-        async function requestDocGeneration(c, extraData) {
+        async function requestDocGeneration(c) {
             Swal.fire({
                 title: 'กำลังสร้างไฟล์...',
                 text: 'กรุณารอสักครู่ ระบบกำลังสร้าง Google Doc และดึงรูปภาพ',
@@ -461,8 +454,8 @@
                     method: 'POST',
                     body: JSON.stringify({ 
                         action: 'generateResumeDoc',
-                        candidate: c,
-                        extraData: extraData
+                        candidate: c
+                        // ตัด extraData ออก
                     })
                 });
                 const result = await response.json();
