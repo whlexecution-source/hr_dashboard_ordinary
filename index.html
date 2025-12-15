@@ -422,19 +422,20 @@
         // --- NEW: Generate Google Doc via Backend ---
 
         async function promptExtraDataAndExport(c) {
-            // แก้ไข Popup: ไม่ต้องกรอกข้อมูลแล้ว ถามแค่ยืนยัน
+            // ไม่ต้องกรอก Key Qualifications แล้ว (ให้ไปเติมใน Doc เอง)
+            // ถามแค่ยืนยันการสร้างไฟล์
             const result = await Swal.fire({
                 title: 'สร้างไฟล์ Resume',
                 text: `คุณต้องการสร้างไฟล์ Google Docs สำหรับ ${c.name} หรือไม่?`,
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonText: 'สร้างไฟล์',
+                confirmButtonText: 'ยืนยัน',
                 confirmButtonColor: '#0b5394',
                 cancelButtonText: 'ยกเลิก'
             });
 
             if (result.isConfirmed) {
-                // ส่งค่า candidate ไปอย่างเดียว ไม่ต้องมี extraData
+                // เรียก Backend โดยไม่ต้องส่ง extraData
                 requestDocGeneration(c);
             }
         }
